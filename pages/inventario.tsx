@@ -211,6 +211,13 @@ export default function Inventario() {
                         />
                       </td>
                       <td className="p-2 border space-x-2">
+                        
+                        <button
+                          className="text-red-500 hover:underline"
+                          onClick={() => confirmDelete(item.id)}
+                        >
+                          Eliminar
+                        </button>
                         {editedItems[item.id] && (
                           <button
                             className="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700"
@@ -219,12 +226,6 @@ export default function Inventario() {
                             Guardar
                           </button>
                         )}
-                        <button
-                          className="text-red-500 hover:underline"
-                          onClick={() => confirmDelete(item.id)}
-                        >
-                          Eliminar
-                        </button>
                       </td>
                     </tr>
                   );

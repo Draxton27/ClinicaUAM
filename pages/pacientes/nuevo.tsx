@@ -1,148 +1,140 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import firebase from "../../firebase/clientApp";
-import { useSession } from "next-auth/react";
-import { useUserRoles } from "../../utils/hooks/useUserRole";
 import { useRouter } from "next/router";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-
+import Content from "../../components/content/Content";
+import Shell from "../../components/shell";
 
 export default function NuevoPaciente() {
-    const { data: session } = useSession();
-    const roles = useUserRoles();
-    const router = useRouter();
+  const router = useRouter();
+  const db = firebase.firestore();
 
-    const [email, setEmail] = useState("");
-    const [name, setName] = useState("");
-    const [birthdate, setBirthdate] = useState("");
-    const [sex, setSex] = useState("");
-    const [observations, setObservations] = useState("");
+  const [email, setEmail] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [birthdate, setBirthdate] = useState("");
+  const [sex, setSex] = useState("");
+  const [error, setError] = useState("");
 
-    const [error, setError] = useState("");
-    const [success, setSuccess] = useState("");
-    const [users, setUsers] = useState<
-        { uid: string; email: string; isPatient: boolean }[]
-    >([]);
+  const validarCorreo = (correo: string): boolean => {
+    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return regex.test(correo);
+  };
 
-    const db = firebase.firestore();
+  const registrarPaciente = async (redirigir: boolean) => {
+    setError("");
 
-    // Cargar usuarios y detectar si ya son pacientes
-    useEffect(() => {
-        const fetchUsuarios = async () => {
-            const [usersSnap, patientsSnap] = await Promise.all([
-                db.collection("users").get(),
-                db.collection("patients").get(),
-            ]);
+    if (!email || !firstName || !lastName || !birthdate || !sex) {
+      setError("Todos los campos son obligatorios.");
+      return;
+    }
 
-            const pacientesUIDs = new Set(
-                patientsSnap.docs.map((doc) => doc.data().uid)
-            );
+    if (!validarCorreo(email)) {
+      setError("El correo no tiene un formato válido.");
+      return;
+    }
 
-            const users = usersSnap.docs.map((doc) => {
-                const data = doc.data();
-                return {
-                    uid: doc.id,
-                    email: data.email,
-                    isPatient: pacientesUIDs.has(doc.id),
-                };
-            });
+    try {
+      let uid: string | null = null;
 
-            setUsers(users);
-        };
+      const userSnap = await db
+        .collection("users")
+        .where("email", "==", email)
+        .limit(1)
+        .get();
 
-        fetchUsuarios();
-    }, []);
+      if (!userSnap.empty) {
+        uid = userSnap.docs[0].id;
 
-    const handleSubmit = async () => {
-        setError("");
-        setSuccess("");
+        const existingPatient = await db
+          .collection("patients")
+          .where("uid", "==", uid)
+          .limit(1)
+          .get();
 
-        const selectedUser = users.find((u) => u.email === email);
-
-        if (!selectedUser) {
-            setError("Debe seleccionar un usuario válido.");
-            return;
+        if (!existingPatient.empty) {
+          setError("Este usuario ya está registrado como paciente.");
+          return;
         }
+      } else {
+        const newUser = await db.collection("users").add({
+          email,
+          createdAt: firebase.firestore.Timestamp.now(),
+        });
+        uid = newUser.id;
+      }
 
-        if (selectedUser.isPatient) {
-            setError("Este usuario ya está registrado como paciente.");
-            return;
+      const nuevoPaciente = await db.collection("patients").add({
+        uid,
+        email,
+        name: `${firstName} ${lastName}`,
+        birthdate,
+        sex,
+        createdAt: firebase.firestore.Timestamp.now(),
+      });
+
+      toast.success("Paciente registrado exitosamente");
+
+      setEmail("");
+      setFirstName("");
+      setLastName("");
+      setBirthdate("");
+      setSex("");
+
+      setTimeout(() => {
+        if (redirigir) {
+          router.push(`/pacientes/${nuevoPaciente.id}/consultas/nueva`);
+        } else {
+          router.push("/pacientes");
         }
+      }, 1500);
+    } catch (err) {
+      console.error(err);
+      setError("Error al registrar paciente.");
+    }
+  };
 
-        if (!name || !birthdate || !sex) {
-            setError("Todos los campos son obligatorios.");
-            return;
-        }
+  return (
+    <Shell>
+        <Content title="Registrar nuevo paciente">
+            <div className="max-w-xl mx-auto p-6 bg-white shadow-md rounded-md">
 
-        try {
-            await db.collection("patients").add({
-                uid: selectedUser.uid,
-                email,
-                name,
-                birthdate,
-                sex,
-                observations,
-                createdAt: firebase.firestore.Timestamp.now(),
-            });
+            {error && <p className="text-red-600 mb-3">{error}</p>}
 
-            toast.success("Paciente registrado exitosamente");
-
-            setEmail("");
-            setName("");
-            setBirthdate("");
-            setSex("");
-            setObservations("");
-
-            setUsers((prev) =>
-                prev.map((u) =>
-                u.uid === selectedUser.uid ? { ...u, isPatient: true } : u
-                )
-            );
-
-            setTimeout(() => {
-                router.push("/pacientes");
-            }, 1500);
-
-            } catch (err) {
-            console.error(err);
-            setError("Error al registrar paciente.");
-        }
-    };
-
-    return (
-        <div className="max-w-xl mx-auto p-6">
-            <h2 className="text-2xl font-bold mb-4">Registrar nuevo paciente</h2>
-
-            {error && <p className="text-red-600 mb-2">{error}</p>}
-            {success && <p className="text-green-600 mb-2">{success}</p>}
-
-            <select
-                className="input w-full mb-2"
+            <input
+                className="input w-full mb-3 border border-gray-300 px-3 py-2 rounded"
+                type="email"
+                placeholder="Correo electrónico"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-            >
-                <option value="">Seleccione un usuario</option>
-                {users.map((u) => (
-                    <option key={u.uid} value={u.email} disabled={u.isPatient}>
-                        {u.email} {u.isPatient ? "(ya está registrado)" : ""}
-                    </option>
-                ))}
-            </select>
-
-            <input
-                className="input w-full mb-2"
-                placeholder="Nombre completo"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
             />
-            <input
+
+            <div className="flex gap-4 mb-3">
+                <input
+                className="input w-full border border-gray-300 px-3 py-2 rounded"
+                placeholder="Nombre"
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+                />
+                <input
+                className="input w-full border border-gray-300 px-3 py-2 rounded"
+                placeholder="Apellido"
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+                />
+            </div>
+
+            <label className="block text-sm font-medium text-gray-700 mb-1">Fecha de nacimiento</label>
+                <input
                 type="date"
-                className="input w-full mb-2"
+                className="input w-full mb-3"
                 value={birthdate}
                 onChange={(e) => setBirthdate(e.target.value)}
-            />
+                />
+
             <select
-                className="input w-full mb-2"
+                className="input w-full mb-4 border border-gray-300 px-3 py-2 rounded"
                 value={sex}
                 onChange={(e) => setSex(e.target.value)}
             >
@@ -151,19 +143,25 @@ export default function NuevoPaciente() {
                 <option value="F">Femenino</option>
                 <option value="Otro">Otro</option>
             </select>
-            <textarea
-                className="input w-full mb-2"
-                placeholder="Observaciones iniciales"
-                value={observations}
-                onChange={(e) => setObservations(e.target.value)}
-            />
-            <button
-                onClick={handleSubmit}
+
+            <div className="flex flex-col sm:flex-row gap-3">
+                <button
+                onClick={() => registrarPaciente(false)}
                 className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-            >
+                >
                 Guardar
-            </button>
+                </button>
+                <button
+                onClick={() => registrarPaciente(true)}
+                className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+                >
+                Guardar y crear consulta
+                </button>
+            </div>
+
             <ToastContainer />
-        </div>
-    );
+            </div>
+        </Content>
+    </Shell>
+  );
 }

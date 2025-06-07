@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import firebase from "../../firebase/clientApp";
 import { useRouter } from "next/router";
+import Content from "../../components/content/Content";
+import Shell from "../../components/shell";
 
 export default function NuevoProducto() {
   const db = firebase.firestore();
@@ -14,14 +16,14 @@ export default function NuevoProducto() {
   const handleSubmit = async () => {
     setError("");
 
-    if (!name || quantity < 0 || price < 0) {
-      setError("Todos los campos son obligatorios y válidos.");
+    if (!name.trim() || quantity < 0 || price < 0) {
+      setError("Todos los campos son obligatorios y deben ser válidos.");
       return;
     }
 
     try {
       await db.collection("inventory").add({
-        name,
+        name: name.trim(),
         quantity,
         price,
         createdAt: firebase.firestore.Timestamp.now(),
@@ -35,37 +37,64 @@ export default function NuevoProducto() {
   };
 
   return (
-    <div className="max-w-xl mx-auto p-6">
-      <h2 className="text-2xl font-bold mb-4">Nuevo producto</h2>
+    <Shell>
+      <Content title="Agregar Nuevo Producto">
+        <div className="max-w-xl mx-auto bg-white shadow-lg rounded-xl p-6 space-y-6">
 
-      {error && <p className="text-red-600 mb-2">{error}</p>}
+          {error && <p className="text-red-600 text-sm">{error}</p>}
 
-      <input
-        className="input w-full mb-2"
-        placeholder="Nombre del producto"
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-      />
-      <input
-        className="input w-full mb-2"
-        type="number"
-        placeholder="Cantidad"
-        value={quantity}
-        onChange={(e) => setQuantity(Number(e.target.value))}
-      />
-      <input
-        className="input w-full mb-2"
-        type="number"
-        placeholder="Precio"
-        value={price}
-        onChange={(e) => setPrice(Number(e.target.value))}
-      />
-      <button
-        onClick={handleSubmit}
-        className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-      >
-        Guardar
-      </button>
-    </div>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Nombre del producto
+              </label>
+              <input
+                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Ej. Ibuprofeno 200mg"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+              />
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Cantidad
+                </label>
+                <input
+                  type="number"
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  value={quantity}
+                  onChange={(e) => setQuantity(Number(e.target.value))}
+                  min={0}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Precio (C$)
+                </label>
+                <input
+                  type="number"
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  value={price}
+                  onChange={(e) => setPrice(Number(e.target.value))}
+                  min={0}
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="flex justify-end">
+            <button
+              onClick={handleSubmit}
+              className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition"
+            >
+              Guardar producto
+            </button>
+          </div>
+        </div>
+      </Content>
+    </Shell>
   );
 }

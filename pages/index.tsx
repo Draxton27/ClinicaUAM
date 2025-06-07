@@ -96,16 +96,16 @@ export default function Pacientes() {
     <Shell>
       <Content title="Pacientes registrados">
         <>
-          <div className="flex justify-between mb-4">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
             <input
               type="text"
               placeholder="Buscar por nombre..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="border px-3 py-2 rounded w-1/3"
+              className="border px-3 py-2 rounded w-full sm:w-1/2"
             />
             <Link href="/pacientes/nuevo">
-              <a className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+              <a className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 w-full sm:w-auto text-center">
                 Registrar nuevo paciente
               </a>
             </Link>
@@ -116,39 +116,54 @@ export default function Pacientes() {
           ) : sortedAndFiltered().length === 0 ? (
             <p>No hay pacientes registrados.</p>
           ) : (
-            <table className="w-full table-auto border-collapse">
-              <thead>
-                <tr className="bg-gray-200 text-left cursor-pointer">
-                  <th className="p-2 border" onClick={() => handleSort("name")}>
-                    Nombre {sortConfig?.key === "name" && (sortConfig.direction === "asc" ? "↑" : "↓")}
-                  </th>
-                  <th className="p-2 border" onClick={() => handleSort("email")}>
-                    Correo {sortConfig?.key === "email" && (sortConfig.direction === "asc" ? "↑" : "↓")}
-                  </th>
-                  <th className="p-2 border" onClick={() => handleSort("birthdate")}>
-                    Fecha de nacimiento (yyyy/dd/mm){" "}
-                    {sortConfig?.key === "birthdate" && (sortConfig.direction === "asc" ? "↑" : "↓")}
-                  </th>
-                  <th className="p-2 border" onClick={() => handleSort("sex")}>
-                    Género {sortConfig?.key === "sex" && (sortConfig.direction === "asc" ? "↑" : "↓")}
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {sortedAndFiltered().map((p) => (
-                  <tr
-                    key={p.id}
-                    className="border-t cursor-pointer hover:bg-gray-100"
-                    onClick={() => router.push(`/pacientes/${p.id}/consultas`)}
-                  >
-                    <td className="p-2 border">{p.name}</td>
-                    <td className="p-2 border">{p.email}</td>
-                    <td className="p-2 border">{p.birthdate}</td>
-                    <td className="p-2 border">{p.sex}</td>
+            <div className="overflow-x-auto">
+              <table className="min-w-full table-auto border-collapse">
+                <thead>
+                  <tr className="bg-gray-200 text-left">
+                    <th className="p-2 border cursor-pointer" onClick={() => handleSort("name")}>
+                      Nombre {sortConfig?.key === "name" && (sortConfig.direction === "asc" ? "↑" : "↓")}
+                    </th>
+                    <th className="p-2 border cursor-pointer" onClick={() => handleSort("email")}>
+                      Correo {sortConfig?.key === "email" && (sortConfig.direction === "asc" ? "↑" : "↓")}
+                    </th>
+                    <th className="p-2 border cursor-pointer" onClick={() => handleSort("birthdate")}>
+                      Fecha de nacimiento (yyyy/dd/mm) {sortConfig?.key === "birthdate" && (sortConfig.direction === "asc" ? "↑" : "↓")}
+                    </th>
+                    <th className="p-2 border cursor-pointer" onClick={() => handleSort("sex")}>
+                      Género {sortConfig?.key === "sex" && (sortConfig.direction === "asc" ? "↑" : "↓")}
+                    </th>
+                    <th className="p-2 border">Acciones</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {sortedAndFiltered().map((p) => (
+                    <tr key={p.id} className="border-t hover:bg-gray-100">
+                      <td className="p-2 border cursor-pointer" onClick={() => router.push(`/pacientes/${p.id}/consultas`)}>
+                        {p.name}
+                      </td>
+                      <td className="p-2 border cursor-pointer" onClick={() => router.push(`/pacientes/${p.id}/consultas`)}>
+                        {p.email}
+                      </td>
+                      <td className="p-2 border cursor-pointer" onClick={() => router.push(`/pacientes/${p.id}/consultas`)}>
+                        {p.birthdate}
+                      </td>
+                      <td className="p-2 border cursor-pointer" onClick={() => router.push(`/pacientes/${p.id}/consultas`)}>
+                        {p.sex}
+                      </td>
+                      <td className="p-2 border space-y-2 sm:space-y-0 sm:space-x-2">
+                        <button
+                          className="bg-green-600 text-white px-2 py-1 rounded hover:bg-green-700 w-full sm:w-auto"
+                          onClick={() => router.push(`/pacientes/${p.id}/consultas/nueva`)}
+                        >
+                          Nueva consulta
+                        </button>
+                       
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
         </>
       </Content>
