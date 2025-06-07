@@ -29,7 +29,7 @@ export default function Login() {
                         alt="Logo"
                         className="inline"
                     />
-                    <span className="pl-2">Biblioteca UAM</span>
+                    <span className="pl-2">IntegraMed</span>
                 </div>
 
                 {/* Formulario */}

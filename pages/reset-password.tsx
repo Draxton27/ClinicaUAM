@@ -59,7 +59,7 @@ export default function ResetPasswordPage() {
                         alt="Logo"
                         className="inline"
                     />
-                    <span className="ml-2">Biblioteca UAM</span>
+                    <span className="ml-2">IntegraMed</span>
                 </div>
 
                 <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
