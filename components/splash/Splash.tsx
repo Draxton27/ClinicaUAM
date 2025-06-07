@@ -21,15 +21,15 @@ export default function Splash() {
           <div className="relative z-10 w-full container mx-auto p-6 text-white">
             {/* Header */}
             <div className="w-full flex items-center justify-between">
-              <div className="flex items-center font-bold text-2xl lg:text-4xl text-white">
+              <div className="flex items-center h-[50px]">
                 <Image
-                    src={Logo}
-                    width={40}
-                    height={40}
-                    alt="Logo"
-                    className="inline"
+                  src={Logo}	
+                  alt="Logo IntegraMed"
+                  layout="intrinsic"
+                  height={200}
+                  width={300}
+                  className="object-contain"
                 />
-                <div className="pl-2">Biblioteca UAM</div>
               </div>
 
               <div className="flex w-1/2 justify-end content-center">
@@ -47,15 +47,20 @@ export default function Splash() {
             <div className="container pt-24 md:pt-12 px-6 mx-auto flex flex-wrap flex-col md:flex-row items-center">
               <div className="flex flex-col w-full xl:w-2/5 justify-center lg:items-start text-center md:text-left">
                 <h1 className="my-4 text-4xl md:text-6xl text-white font-extrabold leading-tight">
-                  Bienvenido al sistema de biblioteca UAM
+                  Bienvenido al Sistema IntegraMed
                 </h1>
                 <p className="text-lg md:text-2xl text-gray-200 mb-6">
-                  Administra salas privadas, horas laborales, usuarios y más con eficiencia y claridad.
+                  La solución integral que conecta y simplifica la gestión clínica
                 </p>
               </div>
-
-              <div className="w-full xl:w-3/5 py-6 xl:pl-24">
-                <Image src={hero} alt="Hero" priority />
+              <div className="w-full xl:w-3/5 py-6 px-4 xl:px-0 xl:pl-96">
+                <Image
+                  src={hero}
+                  alt="Hero"
+                  layout="responsive"
+                  objectFit="contain"
+                  priority
+                />
               </div>
             </div>
 

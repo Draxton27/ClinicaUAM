@@ -34,7 +34,7 @@ export default function NavOptions({
             /> */}
 
             <NavItem
-                link="/"
+                link="/pacientes"
                 svgIcon={<Svg.UsersSvg />}
                 title="Pacientes"
                 expanded={expanded}

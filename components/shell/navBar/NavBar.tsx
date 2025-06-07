@@ -15,9 +15,15 @@ export default function NavBar() {
         <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             {/* Logo + título */}
-            <div className="flex items-center text-xl font-bold pl-3 text-white">
-              <Image src={Logo} width={40} height={40} alt="Logo" />
-              <span className="pl-3">Biblioteca UAM</span>
+            <div className="flex items-center h-[50px]">
+                <Image
+                src={Logo}	
+                alt="Logo IntegraMed"
+                layout="intrinsic"
+                height={200}
+                width={300}
+                className="object-contain"
+                />
             </div>
 
             {/* Botón móvil */}

@@ -21,15 +21,15 @@ export default function Login() {
             {/* Contenido principal */}
             <div className="relative z-10 flex min-h-screen flex-col justify-center items-center">
                 {/* Logo */}
-                <div className="flex items-center text-white font-bold text-2xl lg:text-4xl mb-8">
+                <div className="flex items-center h-[50px]">
                     <Image
-                        src={Logo}
-                        width={40}
-                        height={40}
-                        alt="Logo"
-                        className="inline"
+                    src={Logo}	
+                    alt="Logo IntegraMed"
+                    layout="intrinsic"
+                    height={200}
+                    width={300}
+                    className="object-contain"
                     />
-                    <span className="pl-2">IntegraMed</span>
                 </div>
 
                 {/* Formulario */}

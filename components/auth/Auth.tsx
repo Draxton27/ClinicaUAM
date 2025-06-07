@@ -34,7 +34,7 @@ export default function AuthForm() {
       } else {
         await signUpWithEmail(email, password);
       }
-      router.push("/");
+      router.push("/pacientes");
     } catch (err: any) {
       // mensajes personalizados
       if (
@@ -57,7 +57,7 @@ export default function AuthForm() {
     setLoading(true);
     try {
       await signInWithGoogle();
-      router.push("/");
+      router.push("/pacientes");
     } catch (err: any) {
       setError(err.message || "Error con Google");
       setLoading(false);

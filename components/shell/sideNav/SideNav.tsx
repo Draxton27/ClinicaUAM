@@ -33,19 +33,18 @@ const SideNavHeader = () => {
 
     return (
         <div className="flex items-center ml-2 pb-8">
-            <Link href="/" passHref>
+            <Link href="/pacientes" passHref>
                 <a className="flex items-center text-white no-underline hover:text-blue-100">
-                    <Image
-                        src={Logo}
-                        width={40}
-                        height={40}
-                        alt="Logo"
-                        className="inline"
-                    />
-                    {/* Sólo muestro el texto después de montar */}
-                    {mounted && !collapsed && (
-                        <span className="ml-2 text-xl font-bold">IntegraMed</span>
-                    )}
+                    <div className="flex items-center h-[50px]">
+                        <Image
+                        src={Logo}	
+                        alt="Logo IntegraMed"
+                        layout="intrinsic"
+                        height={200}
+                        width={300}
+                        className="object-contain"
+                        />
+                    </div>
                 </a>
             </Link>
         </div>
