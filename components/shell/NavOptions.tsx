@@ -14,25 +14,8 @@ export default function NavOptions({
                                        smallScreen = false,
                                        expanded = true,
                                    }: Props) {
-    const roles = useUserRoles(); // undefined mientras carga, o string[] una vez fetch
-    const isAdmin = Array.isArray(roles) && roles.includes("admin");
-
     return (
         <>
-            {/* <NavItem
-                link="/"
-                svgIcon={<Svg.ChartPieSvg />}
-                title="Calendario"
-                expanded={expanded}
-            />
-
-            <NavItem
-                link="/asistencia"
-                svgIcon={<Svg.MessagesSvg />}
-                title="Asistencias"
-                expanded={expanded}
-            /> */}
-
             <NavItem
                 link="/pacientes"
                 svgIcon={<Svg.UsersSvg />}
@@ -46,16 +29,6 @@ export default function NavOptions({
                 title="Inventario"
                 expanded={expanded}
             />
-
-            {/* Sólo se muestra si el usuario tiene rol "admin" */}
-            {isAdmin && (
-                <NavItem
-                    link="/estudiantes"
-                    svgIcon={<Svg.UsersSvg />}
-                    title="Estudiantes"
-                    expanded={expanded}
-                />
-            )}
 
             {smallScreen && (
                 <>

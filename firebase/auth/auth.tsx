@@ -22,12 +22,6 @@ export const AuthProvider: React.FC = ({ children }) => {
       const token = await user.getIdToken();
       setUser(user);
 
-      const payload = JSON.parse(atob(token.split('.')[1]));
-
-      console.log("Issued at:", new Date(payload.iat * 1000).toLocaleString());
-      console.log("UID:", payload.user_id);
-      console.log("Email:", payload.email);
-
       nookies.set(null, "token", token, { path: "/" });
     });
   }, []);
