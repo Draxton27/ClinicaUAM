@@ -18,7 +18,6 @@ import {
   Receipt,
   DollarSign,
   Clock,
-  Edit,
   Printer,
   Share2,
   AlertCircle,

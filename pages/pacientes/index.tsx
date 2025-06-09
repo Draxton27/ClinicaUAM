@@ -95,34 +95,28 @@ export default function Pacientes() {
 
     const searchTerm = term.toLowerCase().trim()
 
-    switch (filterType) {
-      case "name":
-        return paciente.name.toLowerCase().includes(searchTerm)
+    if (filterType === "name") {
+      return paciente.name.toLowerCase().includes(searchTerm)
+    } else if (filterType === "email") {
+      return paciente.email.toLowerCase().includes(searchTerm)
+    } else if (filterType === "dni") {
+      if (!paciente.dni) return false
+      const normalizedPatientDNI = normalizeDNI(paciente.dni)
+      const normalizedSearchTerm = normalizeDNI(searchTerm)
+      return normalizedPatientDNI.includes(normalizedSearchTerm)
+    } else {// Búsqueda en todos los campos
+      const nameMatch = paciente.name.toLowerCase().includes(searchTerm)
+      const emailMatch = paciente.email.toLowerCase().includes(searchTerm)
 
-      case "email":
-        return paciente.email.toLowerCase().includes(searchTerm)
-
-      case "dni":
-        if (!paciente.dni) return false
+      // Búsqueda de cédula normalizada
+      let dniMatch = false
+      if (paciente.dni) {
         const normalizedPatientDNI = normalizeDNI(paciente.dni)
         const normalizedSearchTerm = normalizeDNI(searchTerm)
-        return normalizedPatientDNI.includes(normalizedSearchTerm)
+        dniMatch = normalizedPatientDNI.includes(normalizedSearchTerm)
+      }
 
-      case "all":
-      default:
-        // Búsqueda en todos los campos
-        const nameMatch = paciente.name.toLowerCase().includes(searchTerm)
-        const emailMatch = paciente.email.toLowerCase().includes(searchTerm)
-
-        // Búsqueda de cédula normalizada
-        let dniMatch = false
-        if (paciente.dni) {
-          const normalizedPatientDNI = normalizeDNI(paciente.dni)
-          const normalizedSearchTerm = normalizeDNI(searchTerm)
-          dniMatch = normalizedPatientDNI.includes(normalizedSearchTerm)
-        }
-
-        return nameMatch || emailMatch || dniMatch
+      return nameMatch || emailMatch || dniMatch
     }
   }
 
