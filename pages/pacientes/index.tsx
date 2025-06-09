@@ -362,16 +362,19 @@ export default function Pacientes() {
 }
 
 export async function getServerSideProps(ctx: GetServerSidePropsContext) {
-  const cookies = nookies.get(ctx)
-  const authenticated = await userIsLoggedIn(cookies)
+  const cookies = nookies.get(ctx);
+  const authenticated = await userIsLoggedIn(cookies);
 
   if (!authenticated) {
-    ctx.res.writeHead(302, { Location: "/login" })
-    ctx.res.end()
-    return { props: {} }
+    return {
+      redirect: {
+        destination: "/login",
+        permanent: false,
+      },
+    };
   }
 
   return {
-    props: {},
-  }
+    props: {}, // aquí tus props reales si las tuvieras
+  };
 }

@@ -2,6 +2,7 @@ import React from "react";
 import Shell from "../components/shell";
 import { GetServerSidePropsContext } from "next";
 import nookies from "nookies";
+import {userIsLoggedIn} from "../firebase/auth/utils.server";
 
 
 export default function Settings() {
@@ -13,16 +14,19 @@ export default function Settings() {
 }
 
 export async function getServerSideProps(ctx: GetServerSidePropsContext) {
-  const { userIsLoggedIn } = await import("../firebase/auth/utils.server");
   const cookies = nookies.get(ctx);
   const authenticated = await userIsLoggedIn(cookies);
 
   if (!authenticated) {
-    ctx.res.writeHead(302, { Location: "/login" });
-    ctx.res.end();
+    return {
+      redirect: {
+        destination: "/login",
+        permanent: false,
+      },
+    };
   }
 
   return {
-    props: {},
+    props: {}, // aquí tus props reales si las tuvieras
   };
 }
