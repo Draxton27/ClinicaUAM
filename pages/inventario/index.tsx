@@ -1,5 +1,3 @@
-"use client"
-
 import React, { useEffect, useState } from "react"
 import firebase from "../../firebase/clientApp" // Assuming this path is correct
 import Shell from "../../components/shell"

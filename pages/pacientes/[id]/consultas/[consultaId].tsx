@@ -1,5 +1,3 @@
-"use client"
-
 import { useRouter } from "next/router"
 import React, { useEffect, useState } from "react"
 import firebase from "../../../../firebase/clientApp"
