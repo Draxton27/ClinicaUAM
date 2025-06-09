@@ -4,7 +4,7 @@ import NavOptions from "../NavOptions";
 import Link from "next/link";
 import { signOut } from "../../../utils/genericUtils";
 import Image from "next/image";
-import Logo from "../../../images/logo.png";
+import Logo from "../../../images/logologo.png";
 import useLocalStorage from "../../../utils/hooks/useLocalStorage";
 
 const CollapsedContext = createContext(false);
@@ -35,16 +35,17 @@ const SideNavHeader = () => {
         <div className="flex items-center ml-2 pb-8">
             <Link href="/pacientes" passHref>
                 <a className="flex items-center text-white no-underline hover:text-blue-100">
-                    <div className="flex items-center h-[50px]">
-                        <Image
-                        src={Logo}	
-                        alt="Logo IntegraMed"
-                        layout="intrinsic"
-                        height={200}
-                        width={300}
-                        className="object-contain"
-                        />
-                    </div>
+                    <Image
+                        src={Logo}
+                        width={40}
+                        height={40}
+                        alt="Logo"
+                        className="inline"
+                    />
+                    {/* Sólo muestro el texto después de montar */}
+                    {mounted && !collapsed && (
+                        <span className="ml-2 text-xl font-bold">IntegraMed</span>
+                    )}
                 </a>
             </Link>
         </div>

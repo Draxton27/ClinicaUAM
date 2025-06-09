@@ -7,6 +7,9 @@ import Content from "../../components/content/Content"
 import Link from "next/link"
 import { toast, ToastContainer } from "react-toastify"
 import ModalConfirm from "../../components/ModalConfirm"
+import type {GetServerSidePropsContext} from "next";
+import nookies from "nookies";
+import {userIsLoggedIn} from "../../firebase/auth/utils.server";
 
 type Item = {
   id: string
@@ -341,3 +344,19 @@ export default function Inventario() {
       </Shell>
   )
 }
+
+export async function getServerSideProps(ctx: GetServerSidePropsContext) {
+  const cookies = nookies.get(ctx)
+  const authenticated = await userIsLoggedIn(cookies)
+
+  if (!authenticated) {
+    ctx.res.writeHead(302, { Location: "/login" })
+    ctx.res.end()
+    return { props: {} }
+  }
+
+  return {
+    props: {},
+  }
+}
+

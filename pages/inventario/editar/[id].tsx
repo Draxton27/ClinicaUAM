@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import firebase from "../../../firebase/clientApp";
+import type {GetServerSidePropsContext} from "next";
+import nookies from "nookies";
+import {userIsLoggedIn} from "../../../firebase/auth/utils.server";
 
 export default function EditarProducto() {
   const db = firebase.firestore();
@@ -90,4 +93,19 @@ export default function EditarProducto() {
       </button>
     </div>
   );
+}
+
+export async function getServerSideProps(ctx: GetServerSidePropsContext) {
+  const cookies = nookies.get(ctx)
+  const authenticated = await userIsLoggedIn(cookies)
+
+  if (!authenticated) {
+    ctx.res.writeHead(302, { Location: "/login" })
+    ctx.res.end()
+    return { props: {} }
+  }
+
+  return {
+    props: {},
+  }
 }

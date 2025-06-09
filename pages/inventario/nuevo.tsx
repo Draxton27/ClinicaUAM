@@ -3,6 +3,9 @@ import firebase from "../../firebase/clientApp";
 import { useRouter } from "next/router";
 import Content from "../../components/content/Content";
 import Shell from "../../components/shell";
+import type {GetServerSidePropsContext} from "next";
+import nookies from "nookies";
+import {userIsLoggedIn} from "../../firebase/auth/utils.server";
 
 export default function NuevoProducto() {
   const db = firebase.firestore();
@@ -98,3 +101,19 @@ export default function NuevoProducto() {
     </Shell>
   );
 }
+
+export async function getServerSideProps(ctx: GetServerSidePropsContext) {
+  const cookies = nookies.get(ctx)
+  const authenticated = await userIsLoggedIn(cookies)
+
+  if (!authenticated) {
+    ctx.res.writeHead(302, { Location: "/login" })
+    ctx.res.end()
+    return { props: {} }
+  }
+
+  return {
+    props: {},
+  }
+}
+

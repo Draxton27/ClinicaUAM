@@ -1,8 +1,10 @@
-import React, { useState } from "react"
+"use client"
+
+import React, { useState, useEffect } from "react"
 import { useRouter } from "next/router"
 import { ToastContainer, toast } from "react-toastify"
 import "react-toastify/dist/ReactToastify.css"
-import firebase from "../../firebase/clientApp" // Asumiendo que esta ruta es correcta
+import firebase from "../../../firebase/clientApp"
 
 // Importamos los iconos de Lucide React
 import {
@@ -16,14 +18,16 @@ import {
     AlertCircle,
     ArrowRight,
     ArrowLeft,
+    Save,
+    X,
 } from "lucide-react"
 
 // Componentes personalizados
-import Content from "../../components/content/Content"
-import Shell from "../../components/shell"
+import Content from "../../../components/content/Content"
+import Shell from "../../../components/shell"
 import type {GetServerSidePropsContext} from "next";
 import nookies from "nookies";
-import {userIsLoggedIn} from "../../firebase/auth/utils.server";
+import {userIsLoggedIn} from "../../../firebase/auth/utils.server";
 
 interface PatientData {
     email: string
@@ -40,12 +44,16 @@ interface ValidationErrors {
     [key: string]: string
 }
 
-export default function NuevoPacienteMejorado() {
+export default function EditarPaciente() {
     const router = useRouter()
+    const { id } = router.query
     const db = firebase.firestore()
+
     const [currentStep, setCurrentStep] = useState(1)
     const [isSubmitting, setIsSubmitting] = useState(false)
+    const [isLoading, setIsLoading] = useState(true)
     const [errors, setErrors] = useState<ValidationErrors>({})
+    const [originalData, setOriginalData] = useState<PatientData | null>(null)
 
     const [patientData, setPatientData] = useState<PatientData>({
         email: "",
@@ -60,6 +68,55 @@ export default function NuevoPacienteMejorado() {
 
     const totalSteps = 3
     const progress = (currentStep / totalSteps) * 100
+
+    // Cargar datos del paciente
+    useEffect(() => {
+        const fetchPatientData = async () => {
+            if (!id) return
+
+            try {
+                const doc = await db
+                    .collection("patients")
+                    .doc(id as string)
+                    .get()
+
+                if (!doc.exists) {
+                    toast.error("Paciente no encontrado")
+                    router.push("/pacientes")
+                    return
+                }
+
+                const data = doc.data()
+                if (data) {
+                    // Separar el nombre completo en nombre y apellido
+                    const nameParts = (data.name || "").split(" ")
+                    const firstName = nameParts[0] || ""
+                    const lastName = nameParts.slice(1).join(" ") || ""
+
+                    const patientInfo: PatientData = {
+                        email: data.email || "",
+                        firstName,
+                        lastName,
+                        birthdate: data.birthdate || "",
+                        sex: data.sex || "",
+                        emergencyNumber: data.emergencyNumber || "",
+                        dni: data.dni || "",
+                        direccion: data.direccion || "",
+                    }
+
+                    setPatientData(patientInfo)
+                    setOriginalData(patientInfo)
+                }
+            } catch (error) {
+                console.error("Error al cargar datos del paciente:", error)
+                toast.error("Error al cargar los datos del paciente")
+            } finally {
+                setIsLoading(false)
+            }
+        }
+
+        fetchPatientData()
+    }, [id, db, router])
 
     // Validación en tiempo real
     const validateField = (field: string, value: string): string => {
@@ -121,75 +178,86 @@ export default function NuevoPacienteMejorado() {
         return requiredFields.filter((field) => patientData[field as keyof PatientData]).length
     }
 
-    const registrarPaciente = async (crearConsulta = false) => {
+    // Verificar si hay cambios
+    const hasChanges = (): boolean => {
+        if (!originalData) return false
+        return JSON.stringify(patientData) !== JSON.stringify(originalData)
+    }
+
+    const actualizarPaciente = async () => {
         if (!validateStep(1) || !validateStep(2)) {
             toast.error("Por favor complete todos los campos obligatorios")
+            return
+        }
+
+        if (!hasChanges()) {
+            toast.info("No se detectaron cambios para guardar")
             return
         }
 
         setIsSubmitting(true)
 
         try {
-            let uid: string | null = null
+            // Verificar si el email cambió y ya existe en otro paciente
+            if (patientData.email !== originalData?.email) {
+                const emailQuery = await db.collection("patients").where("email", "==", patientData.email).get()
 
-            const userSnap = await db.collection("users").where("email", "==", patientData.email).limit(1).get()
-
-            if (!userSnap.empty) {
-                uid = userSnap.docs[0].id
-
-                const existingPatient = await db.collection("patients").where("uid", "==", uid).limit(1).get()
-
-                if (!existingPatient.empty) {
-                    toast.error("Este usuario ya está registrado como paciente.")
+                const existingPatient = emailQuery.docs.find((doc) => doc.id !== id)
+                if (existingPatient) {
+                    toast.error("Ya existe otro paciente con este correo electrónico")
                     setIsSubmitting(false)
                     return
                 }
-            } else {
-                const newUser = await db.collection("users").add({
-                    email: patientData.email,
-                    createdAt: firebase.firestore.Timestamp.now(),
-                })
-                uid = newUser.id
             }
 
-            const nuevoPaciente = await db.collection("patients").add({
-                uid,
-                email: patientData.email,
-                name: `${patientData.firstName} ${patientData.lastName}`,
-                birthdate: patientData.birthdate,
-                sex: patientData.sex,
-                emergencyNumber: patientData.emergencyNumber,
-                dni: patientData.dni,
-                direccion: patientData.direccion,
-                createdAt: firebase.firestore.Timestamp.now(),
-            })
+            // Actualizar datos del paciente
+            await db
+                .collection("patients")
+                .doc(id as string)
+                .update({
+                    email: patientData.email,
+                    name: `${patientData.firstName} ${patientData.lastName}`,
+                    birthdate: patientData.birthdate,
+                    sex: patientData.sex,
+                    emergencyNumber: patientData.emergencyNumber,
+                    dni: patientData.dni,
+                    direccion: patientData.direccion,
+                    updatedAt: firebase.firestore.Timestamp.now(),
+                })
 
-            toast.success("Paciente registrado exitosamente")
+            // Si el email cambió, actualizar también en la colección users
+            if (patientData.email !== originalData?.email) {
+                const userQuery = await db.collection("users").where("email", "==", originalData?.email).get()
 
-            // Limpiar campos
-            setPatientData({
-                email: "",
-                firstName: "",
-                lastName: "",
-                birthdate: "",
-                sex: "",
-                emergencyNumber: "",
-                dni: "",
-                direccion: "",
-            })
+                if (!userQuery.empty) {
+                    await db.collection("users").doc(userQuery.docs[0].id).update({
+                        email: patientData.email,
+                        updatedAt: firebase.firestore.Timestamp.now(),
+                    })
+                }
+            }
+
+            toast.success("Información del paciente actualizada exitosamente")
+            setOriginalData(patientData) // Actualizar datos originales
 
             setTimeout(() => {
-                if (crearConsulta) {
-                    router.push(`/pacientes/${nuevoPaciente.id}/consultas/nueva`)
-                } else {
-                    router.push("/pacientes")
-                }
+                router.push(`/pacientes/${id}/consultas`)
             }, 1500)
         } catch (err) {
             console.error(err)
-            toast.error("Error al registrar paciente.")
+            toast.error("Error al actualizar la información del paciente")
         } finally {
             setIsSubmitting(false)
+        }
+    }
+
+    const cancelarEdicion = () => {
+        if (hasChanges()) {
+            if (window.confirm("¿Estás seguro de que quieres cancelar? Se perderán los cambios no guardados.")) {
+                router.back()
+            }
+        } else {
+            router.back()
         }
     }
 
@@ -333,7 +401,7 @@ export default function NuevoPacienteMejorado() {
                 </label>
                 <input
                     id="dni"
-                    placeholder="12345678"
+                    placeholder="001-260204-1006J"
                     value={patientData.dni}
                     onChange={(e) => handleInputChange("dni", e.target.value)}
                     className={`block w-full px-4 py-2 border ${
@@ -397,23 +465,51 @@ export default function NuevoPacienteMejorado() {
                 </div>
             </div>
 
+            {hasChanges() && (
+                <div className="flex items-center p-4 bg-amber-50 border border-amber-200 rounded-md">
+                    <AlertCircle className="h-5 w-5 text-amber-500 mr-3 flex-shrink-0" />
+                    <p className="text-sm text-amber-700">
+                        Se han detectado cambios en la información. Asegúrate de guardar antes de salir.
+                    </p>
+                </div>
+            )}
+
             <div className="flex items-center p-4 bg-green-50 border border-green-200 rounded-md">
                 <CheckCircle2 className="h-5 w-5 text-green-500 mr-3 flex-shrink-0" />
-                <p className="text-sm text-green-700">
-                    ¡Perfecto! Ya tienes toda la información necesaria para registrar al paciente.
-                </p>
+                <p className="text-sm text-green-700">Revisa la información antes de guardar los cambios.</p>
             </div>
         </div>
     )
 
+    if (isLoading) {
+        return (
+            <Shell>
+                <Content title="Cargando...">
+                    <div className="max-w-2xl mx-auto p-8 bg-white shadow-lg rounded-lg border border-gray-200">
+                        <div className="animate-pulse">
+                            <div className="h-8 bg-gray-200 rounded w-3/4 mb-4"></div>
+                            <div className="h-4 bg-gray-200 rounded w-1/2 mb-6"></div>
+                            <div className="space-y-4">
+                                <div className="h-4 bg-gray-200 rounded w-full"></div>
+                                <div className="h-10 bg-gray-200 rounded w-full"></div>
+                                <div className="h-4 bg-gray-200 rounded w-full"></div>
+                                <div className="h-10 bg-gray-200 rounded w-full"></div>
+                            </div>
+                        </div>
+                    </div>
+                </Content>
+            </Shell>
+        )
+    }
+
     return (
         <Shell>
-            <Content title="Registrar nuevo paciente">
+            <Content title="Editar información del paciente">
                 <div className="max-w-2xl mx-auto p-8 bg-white shadow-lg rounded-lg border border-gray-200">
                     <div className="text-center mb-6">
-                        <h2 className="text-2xl font-bold text-gray-900">Registrar Nuevo Paciente</h2>
+                        <h2 className="text-2xl font-bold text-gray-900">Editar Información del Paciente</h2>
                         <p className="text-gray-600 mt-1">
-                            Paso {currentStep} de {totalSteps} - Complete la información del paciente
+                            Paso {currentStep} de {totalSteps} - Modifica la información del paciente
                         </p>
 
                         {/* Indicador de progreso */}
@@ -472,18 +568,20 @@ export default function NuevoPacienteMejorado() {
                                 ) : (
                                     <>
                                         <button
-                                            onClick={() => registrarPaciente(false)}
+                                            onClick={cancelarEdicion}
                                             disabled={isSubmitting}
-                                            className="inline-flex items-center justify-center px-6 py-2 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                            className="inline-flex items-center justify-center px-6 py-2 border border-gray-300 text-base font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                                         >
-                                            {isSubmitting ? "Guardando..." : "Guardar"}
+                                            <X className="h-4 w-4 mr-2" />
+                                            Cancelar
                                         </button>
                                         <button
-                                            onClick={() => registrarPaciente(true)}
-                                            disabled={isSubmitting}
+                                            onClick={actualizarPaciente}
+                                            disabled={isSubmitting || !hasChanges()}
                                             className="inline-flex items-center justify-center px-6 py-2 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                                         >
-                                            {isSubmitting ? "Guardando y creando..." : "Guardar y crear consulta"}
+                                            <Save className="h-4 w-4 mr-2" />
+                                            {isSubmitting ? "Guardando..." : "Guardar cambios"}
                                         </button>
                                     </>
                                 )}
