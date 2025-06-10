@@ -6,6 +6,7 @@ import { useState } from "react";
 import Logo from "../../../images/logo.png";
 import Image from "next/image";
 import NavOptions from "../NavOptions";
+import Link from "next/link";
 
 export default function NavBar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -14,17 +15,19 @@ export default function NavBar() {
       <nav className="bg-[#007C91] sticky top-0 z-50">
         <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
-            {/* Logo + título */}
-            <div className="flex items-center h-[50px]">
+            <Link href="/pacientes" passHref>
+              <a className="flex items-center h-[50px]">
                 <Image
-                src={Logo}	
-                alt="Logo IntegraMed"
-                layout="intrinsic"
-                height={200}
-                width={300}
-                className="object-contain"
+                    src={Logo}
+                    alt="Logo IntegraMed"
+                    layout="intrinsic"
+                    height={200}
+                    width={300}
+                    className="object-contain"
                 />
-            </div>
+              </a>
+            </Link>
+
 
             {/* Botón móvil */}
             <div className="-mr-2 flex">

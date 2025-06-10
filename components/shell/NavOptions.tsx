@@ -16,13 +16,14 @@ export default function NavOptions({
                                    }: Props) {
     return (
         <>
-            <NavItem
-                link="/pacientes"
-                svgIcon={<Svg.UsersSvg />}
-                title="Pacientes"
-                expanded={expanded}
-            />
-
+            <Link href={"/pacientes"} passHref>
+                <NavItem
+                    link="/pacientes"
+                    svgIcon={<Svg.UsersSvg />}
+                    title="Pacientes"
+                    expanded={expanded}
+                />
+            </Link>
             <NavItem
                 link="/inventario"
                 svgIcon={<Svg.ChartPieSvg />}
