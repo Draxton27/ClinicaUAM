@@ -33,12 +33,6 @@ export default function NavOptions({
 
             {smallScreen && (
                 <>
-                    <NavItem
-                        link="/settings"
-                        svgIcon={<Svg.CogSvg />}
-                        title="Settings"
-                        expanded={expanded}
-                    />
                     <a
                         onClick={signOut}
                         className="flex items-center no-underline text-blue-50 hover:text-blue-100 p-3 rounded-md"
