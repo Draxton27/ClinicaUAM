@@ -164,6 +164,40 @@ export default function NuevoPacienteMejorado() {
                 createdAt: firebase.firestore.Timestamp.now(),
             })
 
+            // Enviar correo de bienvenida al paciente
+            try {
+                const emailData = {
+                    patientName: `${patientData.firstName} ${patientData.lastName}`,
+                    patientEmail: patientData.email,
+                    birthdate: patientData.birthdate,
+                    sex: patientData.sex,
+                    dni: patientData.dni,
+                    emergencyNumber: patientData.emergencyNumber,
+                    direccion: patientData.direccion,
+                }
+
+                const emailResponse = await fetch('/api/send-email', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        type: 'patient_welcome',
+                        data: emailData
+                    }),
+                })
+
+                if (emailResponse.ok) {
+                    console.log('Email de bienvenida enviado exitosamente')
+                } else {
+                    console.log(emailResponse)
+                    console.error('Error al enviar email de bienvenida')
+                }
+            } catch (emailError) {
+                console.error('Error al enviar email:', emailError)
+                // No fallamos el registro si el email falla
+            }
+
             toast.success("Paciente registrado exitosamente")
 
             // Limpiar campos
@@ -184,7 +218,7 @@ export default function NuevoPacienteMejorado() {
                 } else {
                     router.push("/pacientes")
                 }
-            }, 1500)
+            }, 500)
         } catch (err) {
             console.error(err)
             toast.error("Error al registrar paciente.")

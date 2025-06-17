@@ -290,11 +290,58 @@ export default function NuevaConsulta() {
         date: firebase.firestore.Timestamp.fromDate(new Date(consultationData.selectedDate)),
         createdAt: firebase.firestore.Timestamp.now(),
       })
-      // Actualizar inventario y redirigir (sin cambios)...
+
+      // Enviar correo de confirmación de consulta guardada
+      if (patient) {
+        try {
+          const emailData = {
+            patientData: {
+              patientName: patient.name,
+              patientEmail: patient.email,
+              birthdate: patient.birthdate,
+              sex: patient.sex,
+            },
+            consultationData: {
+              date: consultationData.selectedDate,
+              symptoms: consultationData.symptoms,
+              diagnosis: consultationData.diagnosis,
+              prescription: consultationData.prescription,
+              consultationPrice: priceNum,
+              medications: selectedMeds,
+              total,
+              notes: consultationData.notes,
+            }
+          }
+
+          const emailResponse = await fetch('/api/send-email', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              type: 'consultation_saved',
+              data: emailData
+            }),
+          })
+
+          if (emailResponse.ok) {
+            console.log('Email de consulta guardada enviado exitosamente')
+          } else {
+            console.error('Error al enviar email de consulta guardada')
+            const errorText = await emailResponse.text()
+            console.log('Respuesta del servidor:', errorText)
+            console.log('Status:', emailResponse.status)
+          }
+        } catch (emailError) {
+          console.log('Error al enviar email:', emailError)
+          // No fallamos el guardado si el email falla
+        }
+      }
+
       toast.success("Consulta guardada exitosamente")
       setTimeout(() => {
         router.push(`/pacientes/${patientId}/consultas`)
-      }, 1500)
+      }, 500)
     } catch (error) {
       console.error("Error al guardar la consulta:", error)
       toast.error("Error al guardar la consulta")
